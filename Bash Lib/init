@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+## Initialisation Functions for the
+## Conjurinc Bash Library
+
+if (( BASH_VERSINFO[0] < 4 )); then
+    echo "Bash Lib requires bash v4 or greater"
+    echo "Current Bash Version: ${BASH_VERSION}"
+    exit 1
+fi
+
+# Shell Otions
+set -euo pipefail
+
+# This script should be sourced before any of
+# the other scripts in this repo. Other scripts
+# make use of ${BASH_LIB_DIR} to find each other.
+
+# Get the relative path to the repo root
+# shellcheck disable=SC2086
+BASH_LIB_DIR_RELATIVE="$(dirname ${BASH_SOURCE[0]})"
+
+# Must be set in order to load the filehandling
+# module. Will be updated when abs_path is available.
+BASH_LIB_DIR="${BASH_LIB_DIR_RELATIVE}"
+
+# Load the filehandling module for the abspath
+# function
+for lib in helpers logging filehandling git github k8s test-utils ruby; do
+    . "${BASH_LIB_DIR_RELATIVE}/${lib}/lib"
+done
+
+# Filter functions and re export only bash-lib functions to subshells
+eval "$(declare -F | sed -e 's/-f /-fx /' | grep 'x bl_')"
+
+# Export the absolute path
+# shellcheck disable=SC2086
+BASH_LIB_DIR="$(bl_abs_path ${BASH_LIB_DIR_RELATIVE})"
+export BASH_LIB_DIR
+
+# Update Submodules
+bl_spushd "${BASH_LIB_DIR}"
+    git submodule update --init --recursive
+bl_spopd
+
+export BATS_CMD="${BASH_LIB_DIR}/test-utils/bats/bin/bats"

@@ -1,0 +1,13 @@
+{
+	"files.exclude": {
+		"server/out": true
+	},
+	"search.exclude": {
+		"out": true
+	},
+	"typescript.tsdk": "./node_modules/typescript/lib",
+	"typescript.tsc.autoDetect": "off",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	}
+}

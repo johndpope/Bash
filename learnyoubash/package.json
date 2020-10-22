@@ -1,0 +1,44 @@
+{
+  "preferGlobal": true,
+  "name": "learnyoubash",
+  "version": "2.1.0",
+  "description": "Learn you how to write your first bash script",
+  "bin": {
+    "learnyoubash": "./bin/learnyoubash"
+  },
+  "scripts": {
+    "test": "eslint . && workshopper-adventure-test",
+    "postpublish": "git push --follow-tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/denysdovhan/learnyoubash.git"
+  },
+  "keywords": [
+    "nodeschool",
+    "workshopper",
+    "tutorial",
+    "bash"
+  ],
+  "author": "Denys Dovhan <email@denysdovhan.com> (http://denysdovhan.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/denysdovhan/learnyoubash/issues"
+  },
+  "homepage": "https://github.com/denysdovhan/learnyoubash#readme",
+  "engines": {
+    "node": ">=6.0",
+    "npm": ">=3.0"
+  },
+  "dependencies": {
+    "colors": "^1.1.2",
+    "diff": "^3.2.0",
+    "workshopper-adventure": "^6.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.16.1",
+    "eslint-config-airbnb-base": "^11.1.0",
+    "eslint-plugin-import": "^2.2.0",
+    "workshopper-adventure-test": "^1.1.1"
+  }
+}

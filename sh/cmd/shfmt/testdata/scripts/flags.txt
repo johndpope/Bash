@@ -1,0 +1,66 @@
+# https://github.com/rogpeppe/go-internal/issues/93
+# ! shfmt -h
+# ! stderr 'flag provided but not defined'
+# stderr 'usage: shfmt'
+# stderr 'Utilities' # definitely includes our help text
+# ! stderr 'help requested' # don't duplicate usage output
+# ! stderr '-test\.' # don't show the test binary's usage func
+
+shfmt -version
+stdout 'devel|v3'
+! stderr .
+
+! shfmt -ln=bash -p
+stderr 'cannot coexist'
+
+! shfmt -ln=bad
+stderr 'unknown shell language'
+
+! shfmt -tojson file
+stderr '-tojson can only be used with stdin'
+
+! shfmt -filename=foo file
+stderr '-filename can only be used with stdin'
+
+# Check all the -ln variations.
+
+stdin input-posix
+! shfmt
+
+stdin input-posix
+shfmt -ln=posix
+stdout 'let'
+
+stdin input-posix
+shfmt -p
+stdout 'let'
+
+stdin input-posix
+! shfmt -ln=mksh
+
+stdin input-posix
+! shfmt -ln=bash
+
+stdin input-mksh
+shfmt -ln=mksh
+stdout 'coprocess'
+
+stdin input-mksh
+! shfmt
+
+# TODO: introduce stdin lang detection
+#stdin -filename=input.mksh input-mksh
+#shfmt
+#stdout 'coprocess'
+#
+#stdin input-mksh-shebang
+#shfmt
+#stdout 'coprocess'
+
+-- input-posix --
+let a+
+-- input-mksh --
+coprocess |&
+-- input-mksh-shebang --
+#!/bin/mksh
+coprocess |&

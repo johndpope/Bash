@@ -1,0 +1,97 @@
+repos:
+
+  - repo: local
+    hooks:
+      - id: shfmt
+        name: shfmt
+        language: golang
+        additional_dependencies: [mvdan.cc/sh/v3/cmd/shfmt@v3.1.2]
+        entry: shfmt
+        args: [-w, -s]
+        types: [text]
+        files: ^(bash_completion|completions/.+|test/(config/bashrc|update-test-cmd-list)|.+\.sh(\.in)?)$
+        exclude: ^completions/(\.gitignore|Makefile.*)$
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.7.1.1
+    hooks:
+      - id: shellcheck
+        args: [-f, gcc]
+        types: [text]
+        files: ^(bash_completion|completions/.+|test/(config/bashrc|update-test-cmd-list)|.+\.sh(\.in)?)$
+        exclude: ^completions/(\.gitignore|Makefile.*)$
+        require_serial: false  # We disable SC1090 anyway, so parallel is ok
+
+  - repo: local
+    hooks:
+      - id: update-test-cmd-list
+        name: update-test-cmd-list
+        language: script
+        entry: test/update-test-cmd-list
+        files: ^test/t/.+\.py$
+        pass_filenames: false
+
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        types: [text]
+        files: ^(helpers/python|.+\.py)$
+        exclude: ^completions/
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.3
+    hooks:
+      - id: flake8
+        args: [--config=test/setup.cfg]
+        additional_dependencies: [flake8-bugbear==20.1.4]
+        types: [text]
+        files: ^(helpers/python|.+\.py)$
+        exclude: ^completions/
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.5.2
+    hooks:
+      - id: isort
+        args: [--settings-path=test/setup.cfg]
+        types: [text]
+        files: ^(helpers/python|.+\.py)$
+        exclude: ^completions/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.782
+    hooks:
+      - id: mypy
+        args: [--config-file=test/setup.cfg]
+        # Intentionally not run on helpers/python (support very old versions)
+        exclude: ^completions/|^test/fixtures/pytest/
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.7.2
+    hooks:
+      - id: pyupgrade
+        args: [--py3-plus, --keep-percent-format]
+        exclude: ^completions/
+
+  - repo: https://github.com/perltidy/perltidy
+    rev: "20200907"
+    hooks:
+      - id: perltidy
+        types: [text]
+        files: ^(helpers/perl|.+\.p[ml])$
+
+  - repo: local
+    hooks:
+      - id: perlcritic
+        name: perlcritic
+        language: perl
+        additional_dependencies: [PETDANCE/Perl-Critic-1.138.tar.gz]
+        entry: perlcritic
+        args: [--quiet, --verbose, "5"]
+        types: [text]
+        files: ^(helpers/perl|.+\.p[ml])$
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.23.2
+    hooks:
+      - id: markdownlint

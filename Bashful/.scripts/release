@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+BOLD=$(tput bold)
+NORMAL=$(tput sgr0)
+
+cd $(dirname $0)
+
+./test
+# one day...
+#./validate
+./tag
+
+echo "${BOLD}Releasing${NORMAL}"
+cd ..
+goreleaser --rm-dist

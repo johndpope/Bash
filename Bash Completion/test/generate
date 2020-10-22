@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+# Generate skeleton files for completion of specified command
+
+import fileinput
+import re
+import sys
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: %s command [args...]" % sys.argv[0], file=sys.stderr)
+        sys.exit(1)
+
+    cmd = testfile = sys.argv[1]
+    args = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else ""
+    marker = ""
+    if re.search("[.+-]", cmd):
+        testfile = re.sub("[.-]", "_", cmd).replace("+", "plus")
+        marker = '\n@pytest.mark.bashcomp(\n    cmd="%s",\n)' % cmd
+    testfile = "test_%s.py" % testfile
+    name = re.sub("(^|[_-]+)(.)", lambda m: m.group(2).upper(), cmd)
+    name = name.replace("+", "Plus")
+
+    with open("t/%s" % testfile, "w") as f:
+        print(
+            """\
+import pytest
+
+%s
+class Test%s:
+    @pytest.mark.complete("%s %s")
+    def test_1(self, completion):
+        assert completion"""
+            % (marker, name, cmd, args),
+            file=f,
+        )
+
+    in_extra_dist = False
+    extra_dist_lines = set()
+    with fileinput.input(files=("t/Makefile.am"), inplace=True) as f:
+        for line in f:
+            if line.startswith("EXTRA_DIST "):
+                in_extra_dist = True
+            elif in_extra_dist:
+                if line.startswith("\t"):
+                    line = line.strip()
+                    if not line.endswith("\\"):
+                        line += " \\"
+                    extra_dist_lines.add(line)
+                    continue
+                extra_dist_lines.add("%s \\" % testfile)
+                sys.stdout.write("\t")
+                print("\n\t".join(sorted(extra_dist_lines))[:-2])
+                in_extra_dist = False
+            sys.stdout.write(line)
+
+
+if __name__ == "__main__":
+    main()

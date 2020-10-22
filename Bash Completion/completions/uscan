@@ -1,0 +1,33 @@
+# uscan completion                                      -*- shell-script -*-
+
+_uscan()
+{
+    local cur prev words cword split
+    _init_completion -s || return
+
+    case $prev in
+        --package)
+            COMPREPLY=($(_xfunc apt-cache _apt_cache_src_packages))
+            return
+            ;;
+        --watchfile)
+            _filedir
+            return
+            ;;
+        --destdir)
+            _filedir -d
+            return
+            ;;
+        --timeout | --upstream-version | --download-version | --check-dirname-level | --check-dirname-regex)
+            COMPREPLY=()
+            return
+            ;;
+    esac
+
+    $split && return
+
+    COMPREPLY=($(compgen -W '$(_parse_help "$1")' -- "$cur"))
+} &&
+    complete -F _uscan uscan
+
+# ex: filetype=sh

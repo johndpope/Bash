@@ -1,0 +1,83 @@
+#!/bin/bash
+
+export script_base_folder=$(dirname "$0")
+export script_base_name=$(basename "$0")
+
+source "${script_base_folder}/onedrive.cfg"
+source "${script_base_folder}/onedrive-base"
+
+export json_parser="${script_base_folder}/libs/json/bash-json-parser"
+export debug_mode=0
+export rename_mode=0
+export silent_mode=0
+
+files=()
+
+while [[ $# -ge 1 ]]; do
+    case $1 in
+        -h|--help)
+            echo "Usage: ${script_base_name} [OPTIONS] file1 [file2...]"
+            echo ""
+            echo "Options:"
+            echo "  .d, --debug    Enable debug mode."
+            echo "      --dotfiles Upload dotfiles."
+            echo "  -f, --folder   Upload files into this remote folder."
+            echo "                 Directory names are separated with a slash, e.g."
+            echo "                 rootFolder/subFolder"
+            echo "                 Do NOT use a trailing slash!"
+            echo "  -h, --help     Show this help."
+            echo "  -r, --rename   Rename the files during upload."
+            echo "                 For each file you specify you MUST also specify"
+            echo "                 the remote filename as the subsequent parameter."
+            echo "                 WARNINGS:"
+            echo "                 1. Be especially careful with globbing."
+            echo "                 2. This disables recursive uploads."
+            exit 0
+            ;;
+        -f|--folder)
+            shift
+            folder_name="${1%/}"
+            folder_name="${folder_name#/}"
+            shift
+            ;;
+        -r|--rename)
+            shift
+            rename_mode=1
+            ;;
+        -d|--debug)
+            shift
+            debug_mode=1
+            ;;
+        --dotfiles)
+            shift
+            shopt -s dotglob
+            ;;
+        *)
+            break;
+            ;;
+    esac
+done
+
+if [ -z "$1" ]; then
+        echo "Please specify at least one file to upload"
+        exit 1
+fi
+
+function start_recursive_upload() {
+    source "${script_base_folder}/onedrive-base"
+
+    api_upload_destination="$1"
+    onedrive_upload_file "$2"
+}
+export -f start_recursive_upload
+
+global_path_prefix="${api_root_folder%/}/${folder_name}"
+global_path_prefix=${global_path_prefix%/}
+
+onedrive_build_remote_local_pairs "${global_path_prefix}" "${@}"
+
+if [ ${#remote_local_pairs} -eq 0 ]; then
+    info "Folder structure created, no files uploaded"
+else
+    printf "%s\0" "${remote_local_pairs[@]}" | xargs -0 -n2 -P${max_upload_threads} bash -c 'start_recursive_upload "$1" "$2"' bash
+fi

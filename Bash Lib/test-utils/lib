@@ -1,0 +1,88 @@
+#!/bin/bash
+
+: "${BASH_LIB_DIR:?BASH_LIB_DIR must be set. Please source bash-lib/init before other scripts from bash-lib.}"
+
+SHELLCHECK_IMAGE="${SHELLCHECK_IMAGE:-koalaman/shellcheck}"
+SHELLCHECK_TAG="${SHELLCHECK_TAG:-v0.6.0}"
+
+# Check a single shell script for syntax
+# and common errors.
+function bl_shellcheck_script(){
+    # NOTE (HughSaunders): I tried using the checkstyle output of
+    # _shellcheck along with a checkstyle2junit xslt stylesheet
+    # from the shellcheck author. However Jenkins only reported
+    # on error per file, as the style sheet created a test element
+    # per file, with mulitple failure elements within.
+    # Jenkins expects one failure element per test.
+
+    local -r script="${1}"
+    echo -e "\nChecking ${script}"
+
+    # SC1091 - sourced scripts are not followed, ok because all scripts in the repo are found.
+    # SC1090 - can't follow non-constant source, ok for because all scripts are checked.
+    local -r ignores="-e SC1091 -e SC1090"
+
+    if bash -n "${script}"; then
+        # shellcheck disable=SC2086
+        docker run --rm -v "${PWD}:/mnt" ${SHELLCHECK_IMAGE}:${SHELLCHECK_TAG} ${ignores} ${script}
+    else
+        return 1
+    fi
+}
+
+function bl_find_scripts(){
+    bl_tracked_files_excluding_subtrees \
+        | while read -r file; do
+            grep --files-with-match '^#!.*bash' "${file}" || true
+        done
+}
+
+function bl_tap2junit(){
+    local -r suite="${1:-BATS}"
+
+    bl_spushd "${BASH_LIB_DIR}/test-utils/tap2junit"
+        docker build . -t tap-junit 1>&2
+    bl_spopd
+
+    # Run tap-junit docker image to convert BATS TAP output to Junit for consumption by jenkins
+    # filters stdin to stdout
+    docker run --rm -i tap-junit -s "${suite}"
+}
+
+# Checks a Changelog file against keepachangelog.com format.
+function bl_validate_changelog(){
+    local CHANGELOG=""
+
+    if [[ -z "${1:-}" ]]; then
+        # Changelog file not specified
+
+        # Look in the current directory
+        if [[ -r CHANGELOG.md ]]; then
+            CHANGELOG="CHANGELOG.md"
+        fi
+
+        # Look in the repo root
+        if [[ -z "${CHANGELOG}" ]] && bl_in_git_repo; then
+            guess="$(bl_repo_root)/CHANGELOG.md"
+            [[ -r "${guess}" ]] && CHANGELOG="${guess}"
+        fi
+
+        if [[ -z "${CHANGELOG}" ]]; then
+            bl_fail "CHANGELOG.md not found in current directory or root of git "\
+                    "repo, please specify the path to the changelog. " \
+                    "Usage: bl_validate_changelog /path/to/CHANGELOG.md"
+        fi
+    else
+        # Changelog specified as parameter, use that.
+        CHANGELOG="${1}"
+        [[ -r "${CHANGELOG}" ]] || bl_fail "Can't read changelog file: ${CHANGELOG}"
+    fi
+
+    # Docker volume paths need to be absolute
+    CHANGELOG="$(bl_abs_path "${CHANGELOG}")"
+
+    docker run \
+        --rm \
+        --volume "${CHANGELOG}:/CHANGELOG.md" \
+        cyberark/parse-a-changelog
+}

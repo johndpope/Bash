@@ -1,0 +1,77 @@
+{
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf *.log */*.log */out node_modules vscode-client/node_modules server/node_modules",
+    "postinstall": "cd server && yarn install && cd ../vscode-client && yarn install && cd ..",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "lint": "yarn lint:bail --fix",
+    "lint:bail": "eslint . --ext js,ts,tsx --cache",
+    "test": "jest --runInBand",
+    "test:coverage": "yarn run test --coverage",
+    "test:watch": "yarn run test --watch",
+    "verify": "yarn run lint && yarn run compile && yarn run test",
+    "verify:bail": "yarn run lint:bail && yarn run compile && yarn run test:coverage",
+    "reinstall-server": "npm uninstall -g bash-language-server && yarn compile && npm i -g ./server",
+    "link-server": "npm uninstall -g bash-language-server && yarn compile && yarn unlink bash-language-server && cd server && yarn link && cd ../vscode-client && yarn link bash-language-server"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.3",
+    "@types/node": "^12.7.5",
+    "@typescript-eslint/eslint-plugin": "^2.21.0",
+    "@typescript-eslint/parser": "^2.21.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-jest": "^22.17.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-simple-import-sort": "^4.0.0",
+    "jest": "25.0.0",
+    "prettier": "^1.19.1",
+    "ts-jest": "^25.2.1",
+    "typescript": "^3.8.3",
+    "vscode-languageserver": "^6.1.1"
+  },
+  "dependencies": {},
+  "resolutions": {
+    "sane": "^3.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "timers": "fake",
+    "clearMocks": true,
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "node",
+      "ts"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/server/out",
+      "<rootDir>/vscode-client/out"
+    ],
+    "transform": {
+      "\\.ts$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "./server/tsconfig.json"
+      }
+    },
+    "testMatch": [
+      "<rootDir>/**/__tests__/*.ts"
+    ],
+    "setupFiles": [
+      "./setupJest.ts"
+    ],
+    "collectCoverageFrom": [
+      "**/*.ts",
+      "!**/__test__/*",
+      "!testing/*"
+    ],
+    "coverageReporters": [
+      "text-summary",
+      "lcov",
+      "html"
+    ]
+  }
+}

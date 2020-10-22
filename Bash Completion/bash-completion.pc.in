@@ -1,0 +1,12 @@
+prefix=@prefix@
+datadir=@datadir@
+sysconfdir=@sysconfdir@
+
+compatdir=${sysconfdir}/bash_completion.d
+completionsdir=${datadir}/@PACKAGE@/completions
+helpersdir=${datadir}/@PACKAGE@/helpers
+
+Name: @PACKAGE@
+Description: programmable completion for the bash shell
+URL: https://github.com/scop/bash-completion
+Version: @VERSION@

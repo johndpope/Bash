@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# This script is an entry point, so init
+# is not assumed to have been run
+# shellcheck disable=SC2086
+. "$(dirname ${BASH_SOURCE[0]})/init"
+
+bl_info "Checking the changelog complies with keepachangelog.com format"
+"${BASH_LIB_DIR}/tests-for-this-repo/validate-changelog"
+
+bl_info "Running BATS Tests"
+"${BASH_LIB_DIR}/tests-for-this-repo/run-bats-tests"
+
+bl_info "Running Python Lint"
+"${BASH_LIB_DIR}/tests-for-this-repo/run-python-lint"
+
+bl_info "Running gitleaks"
+"${BASH_LIB_DIR}/tests-for-this-repo/run-gitleaks"
+
+bl_info "Sucess! All tests passed."

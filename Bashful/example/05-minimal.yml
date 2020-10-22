@@ -1,0 +1,27 @@
+config:
+  collapse-on-completion: true
+  show-summary-footer: false
+  show-task-output: false
+  bullet-char:
+
+tasks:
+  - name: Prepping data
+    cmd: example/scripts/random-worker.sh 1
+
+  - name: Compiling source
+    parallel-tasks:
+      - name: Compiling aux libraries
+        cmd: example/scripts/compile-something.sh 2
+      - name: Compiling app (debug)
+        cmd: example/scripts/compile-something.sh 1
+      - name: Compiling app (release)
+        cmd: example/scripts/compile-something.sh 1
+      - name: Compiling app (with trace)
+        cmd: example/scripts/compile-something.sh 1
+
+  - name: Packaging RPM
+    cmd: example/scripts/random-worker.sh 2
+
+  - name: Cleaning up workspace
+    cmd: example/scripts/random-worker.sh 1
+
